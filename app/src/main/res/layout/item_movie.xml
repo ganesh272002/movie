@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="movie"
+            type="com.example.movieseries.data.Movie" />
+
+        <variable
+            name="isSaved"
+            type="Boolean" />
+
+        <variable
+            name="onHeartClick"
+            type="android.view.View.OnClickListener" />
+    </data>
+    <androidx.cardview.widget.CardView
+        android:layout_width="140dp"
+        android:layout_height="220dp"
+        android:layout_margin="8dp"
+        android:radius="16dp"
+        android:elevation="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_145sdp">
+
+                <ImageView
+                    android:id="@+id/imagePoster"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    app:imageUrl="@{movie.posterPath}" />
+
+                <ImageView
+                    android:id="@+id/heartIcon"
+                    android:layout_width="@dimen/_30sdp"
+                    android:layout_height="@dimen/_30sdp"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="@dimen/_8sdp"
+                    android:tint="@color/white"
+                    android:src="@drawable/outline_heart_check_24"
+                    android:onClick="@{onHeartClick}"
+                     />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/textTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_6sdp"
+                android:textStyle="bold"
+                android:text='@{movie.title != null ? movie.title : movie.name}'
+                android:textSize="@dimen/_16ssp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</layout>
