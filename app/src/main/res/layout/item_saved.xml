@@ -3,10 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <variable
-            name="movie"
-            type="com.example.movieseries.data.Movie" />
 
+
+        <variable
+            name="item"
+            type="com.example.movieseries.data.SavedItemEntity" />
 
 
         <variable
@@ -38,7 +39,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    app:imageUrl="@{movie.posterPath}" />
+                    app:imageUrl="@{item.posterPath}" />
 
             </FrameLayout>
 
@@ -55,20 +56,21 @@
                     android:layout_gravity="top|end"
 
                     android:onClick="@{onHeartClick}"
-                app:heartIcon="@{isSaved}" />
+                    android:src="@drawable/filled_heart" />
 
-            <TextView
-                android:id="@+id/textTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
 
-                android:text='@{movie.title != null ? movie.title : movie.name}'
-                android:textSize="@dimen/_10ssp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/textTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text='@{item.title != null ? item.title : item.name}'
+                    android:textSize="@dimen/_10ssp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
         </LinearLayout>
-
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </layout>

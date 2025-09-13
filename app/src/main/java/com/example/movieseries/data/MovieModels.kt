@@ -1,11 +1,14 @@
 package com.example.movieseries.data
 
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
+import kotlinx.android.parcel.Parcelize
 
 
+@Parcelize
 data class Movie(
     val id: Int,
     val title: String?,
@@ -13,25 +16,58 @@ data class Movie(
     @SerializedName("vote_average") val rating: Float,
     @SerializedName("poster_path") val posterPath: String?,
     @SerializedName("backdrop_path") val backdropPath: String?,
-    @SerializedName("overview") val overview: String
-)
+    @SerializedName("overview") val overview: String,
+    val isSaved: Boolean = false
+): Parcelable
+
+@Parcelize
+data class Series(
+    val id: Int,
+    val name: String?, // series title
+    @SerializedName("vote_average") val rating: Float,
+    @SerializedName("poster_path") val posterPath: String?,
+    @SerializedName("backdrop_path") val backdropPath: String?,
+    @SerializedName("overview") val overview: String,
+    val isSaved: Boolean = false
+) : Parcelable
+
 
 
 data class MovieResponse(
-    val results: List<Movie>
+    val page: Int,
+    val results: List<Movie>,
+    val total_pages: Int,
+    val total_results: Int
 )
 
 
-data class Category(
+data class SeriesResponse(
+    val results: List<Series>
+)
+
+
+data class MovieCategory(
     val title: String,
     val movies: List<Movie>
 )
-@Entity(tableName = "saved_movies")
-data class MovieEntity(
-    @PrimaryKey val id: Int,
+
+data class SeriesCategory(
     val title: String,
-    val posterPath: String?,
-    val backdropPath: String?,
-    val overview: String,
-    val rating: Float
+    val series: List<Series>
 )
+
+
+
+
+
+@Parcelize
+@Entity(tableName = "saved_items")
+data class SavedItemEntity(
+    @PrimaryKey val id: Int,
+    val title: String?,
+    val name: String?,
+    val overview: String?,
+    val posterPath: String?,
+    val rating: Double?,
+    val type: String
+): Parcelable

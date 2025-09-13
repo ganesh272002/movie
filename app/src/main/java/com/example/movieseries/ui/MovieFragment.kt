@@ -1,122 +1,132 @@
 package com.example.movieseries.ui
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.movieseries.R
-import com.example.movieseries.data.MovieEntity
-import com.example.movieseries.data.MovieRepository
-import com.example.movieseries.data.Resource
-import com.example.movieseries.databinding.FragmentHomeBinding
+import com.example.movieseries.data.SavedItemEntity
 import com.example.movieseries.databinding.FragmentMovieBinding
 import com.example.movieseries.viewmodel.HomeViewModel
-import com.example.movieseries.viewmodel.HomeViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class MovieFragment : Fragment() {
 
     private var _binding: FragmentMovieBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var viewModel: HomeViewModel
-    private lateinit var movieAdapter: MoviesAdapter
-    private lateinit var seriesAdapter: MoviesAdapter
+    private val viewModel: HomeViewModel by viewModels()
+    private lateinit var categoryAdapter: MovieCategoryAdapter
 
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
+
+    private var currentPage = 1
+    private var totalPages = 1
+    private var isLoading = false
+    private var isLastPage = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMovieBinding.inflate(inflater, container, false)
-
-        // ViewModel scoped to Fragment (or use activityViewModels if shared)
-        val repository = MovieRepository.getInstance(requireContext())
-        val factory = HomeViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, factory)[HomeViewModel::class.java]
-
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        setupRecyclerViews()
+        setupRecyclerView()
         observeViewModel()
 
-
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.loadPopularMovies(apiKey)
-
+            currentPage = 1
+            isLastPage = false
+            viewModel.loadMovieCategories(apiKey)
         }
 
-
-        viewModel.loadPopularMovies(apiKey)
-
+        viewModel.loadMovieCategories(apiKey)
     }
 
-    private fun setupRecyclerViews() {
-
-        movieAdapter = MoviesAdapter { movie ->
-            val entity = movie.toEntity()
-            viewModel.saveMovie(entity)
-        }
-
-
-        seriesAdapter = MoviesAdapter { movie ->
-            val entity = movie.toEntity()
-            viewModel.saveMovie(entity)
-        }
+    private fun setupRecyclerView() {
+        categoryAdapter = MovieCategoryAdapter(
+            fragment = this,
+            onFavoriteClick = { movie, isSaved ->
+                val entity = SavedItemEntity(
+                    id = movie.id,
+                    title = movie.title ?: movie.name.orEmpty(),
+                    name = null,
+                    overview = movie.overview,
+                    posterPath = movie.posterPath,
+                    rating = movie.rating.toDouble(),
+                    type = "movie"
+                )
+                if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
+            },
+            onLoadMore = { // horizontal pagination callback
+                if (!isLoading && !isLastPage) {
+                    isLoading = true
+                    currentPage++
+                    loadNextPage()
+                }
+            }
+        )
 
         binding.recyclerViewMovies.apply {
-            layoutManager =
-                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            adapter = movieAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = categoryAdapter
         }
+    }
 
+    private fun loadNextPage() {
+        viewModel.loadPopularMovies(apiKey, currentPage) { response ->
+            binding.swipeRefreshLayout.isRefreshing = false
+            isLoading = false
 
+            response?.let {
+                totalPages = it.total_pages
+
+                // Append new items to "Popular Movies" category
+                val currentList = categoryAdapter.currentList.toMutableList()
+                val index = currentList.indexOfFirst { c -> c.title == "Popular Movies" }
+                if (index != -1) {
+                    val updatedCategory = currentList[index].copy(
+                        movies = currentList[index].movies + it.results
+                    )
+                    currentList[index] = updatedCategory
+                    categoryAdapter.submitList(currentList)
+                }
+            }
+            isLastPage = currentPage >= totalPages
+        }
     }
 
     private fun observeViewModel() {
-        viewModel.popularMovies.observe(viewLifecycleOwner) { resource ->
-            when (resource) {
-                is Resource.Loading -> {
-                    binding.swipeRefreshLayout.isRefreshing = true
-                }
-
-                is Resource.Success -> {
-                    movieAdapter.submitList(resource.data)
-                    binding.swipeRefreshLayout.isRefreshing = false
-                }
-
-                is Resource.Error -> {
-                    binding.swipeRefreshLayout.isRefreshing = false
-                    Toast.makeText(requireContext(), resource.message, Toast.LENGTH_SHORT).show()
-                }
+        viewModel.savedMovies.observe(viewLifecycleOwner) { savedList ->
+            val savedIds = savedList.map { it.id }.toSet()
+            val updatedCategories = categoryAdapter.currentList.map { category ->
+                category.copy(
+                    movies = category.movies.map { it.copy(isSaved = savedIds.contains(it.id)) }
+                )
             }
+            categoryAdapter.submitList(updatedCategories)
         }
 
-
+        viewModel.movieCategories.observe(viewLifecycleOwner) { categories ->
+            val savedIds = viewModel.savedMovies.value?.map { it.id }?.toSet() ?: emptySet()
+            val updatedCategories = categories.map { category ->
+                category.copy(
+                    movies = category.movies.map { it.copy(isSaved = savedIds.contains(it.id)) }
+                )
+            }
+            binding.swipeRefreshLayout.isRefreshing = false
+            categoryAdapter.submitList(updatedCategories)
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-
-
-    private fun com.example.movieseries.data.Movie.toEntity(): MovieEntity {
-        return MovieEntity(
-            id = id,
-            title = title ?: name.orEmpty(),
-            posterPath = posterPath,
-            backdropPath = backdropPath,
-            overview = overview,
-            rating = rating
-        )
-    }
 }
-

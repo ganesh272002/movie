@@ -4,10 +4,8 @@
 
     <data>
         <variable
-            name="movie"
-            type="com.example.movieseries.data.Movie" />
-
-
+            name="series"
+            type="com.example.movieseries.data.Series" />
 
         <variable
             name="isSaved"
@@ -17,6 +15,7 @@
             name="onHeartClick"
             type="android.view.View.OnClickListener" />
     </data>
+
     <androidx.cardview.widget.CardView
         android:layout_width="140dp"
         android:layout_height="220dp"
@@ -33,42 +32,43 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_145sdp">
 
+                <!-- Poster -->
                 <ImageView
                     android:id="@+id/imagePoster"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    app:imageUrl="@{movie.posterPath}" />
-
+                    app:imageUrl="@{series.posterPath}" />
             </FrameLayout>
 
+            <!-- Row: Heart + Title -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <!-- Heart icon -->
                 <ImageView
                     android:id="@+id/heartIcon"
                     android:layout_width="30sp"
                     android:layout_height="30sp"
                     android:layout_gravity="top|end"
-
                     android:onClick="@{onHeartClick}"
-                app:heartIcon="@{isSaved}" />
+                    app:heartIcon="@{isSaved}" />
 
-            <TextView
-                android:id="@+id/textTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
+                <!-- Title -->
+                <TextView
+                    android:id="@+id/textTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text='@{series.name != null ? series.name : ""}'
+                    android:textSize="@dimen/_10ssp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-                android:text='@{movie.title != null ? movie.title : movie.name}'
-                android:textSize="@dimen/_10ssp"
-                android:textStyle="bold" />
         </LinearLayout>
-
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+    </androidx.cardview.widget.CardView>
 </layout>

@@ -25,13 +25,7 @@
                 android:padding="@dimen/_10sdp">
 
                 <!-- Movies Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Movies"
-                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                    android:paddingStart="@dimen/_4sdp"
-                    android:paddingBottom="@dimen/_4sdp" />
+
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerViewMovies"

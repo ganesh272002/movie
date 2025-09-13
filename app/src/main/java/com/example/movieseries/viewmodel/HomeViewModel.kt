@@ -4,66 +4,116 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.movieseries.data.Movie
-import com.example.movieseries.data.MovieEntity
-import com.example.movieseries.data.MovieRepository
+import com.example.movieseries.data.*
 import com.example.movieseries.data.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.HttpException
-import java.io.IOException
+import javax.inject.Inject
 
-class HomeViewModel(private val repository: MovieRepository) : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val repository: SavedRepository
+) : ViewModel() {
 
-    private val _popularMovies = MutableLiveData<Resource<List<Movie>>>()
-    val popularMovies: LiveData<Resource<List<Movie>>> = _popularMovies
+    // ------------------ Local Database ------------------
+    val savedMovies: LiveData<List<SavedItemEntity>> = repository.getItemsByType("movie")
+    val savedSeries: LiveData<List<SavedItemEntity>> = repository.getItemsByType("series")
 
-    private val _popularSeries = MutableLiveData<List<Movie>>()
-    val popularSeries: LiveData<List<Movie>> get() = _popularSeries
+    fun saveItem(item: SavedItemEntity) = viewModelScope.launch(Dispatchers.IO) {
+        repository.insertItem(item)
+    }
 
-    val searchText = MutableLiveData<String>() // For two-way binding example
+    fun removeItem(item: SavedItemEntity) = viewModelScope.launch(Dispatchers.IO) {
+        repository.deleteItem(item)
+    }
 
-    fun loadPopularMovies(apiKey: String, page: Int = 1) {
+    suspend fun isItemSaved(id: Int, type: String): Boolean {
+        return repository.isItemSaved(id, type)
+    }
+
+    // ------------------ Remote API Categories ------------------
+
+    private val _movieCategories = MutableLiveData<List<MovieCategory>>()
+    val movieCategories: LiveData<List<MovieCategory>> = _movieCategories
+
+    private val _seriesCategories = MutableLiveData<List<SeriesCategory>>()
+    val seriesCategories: LiveData<List<SeriesCategory>> = _seriesCategories
+
+    // ------------------ Loaders ------------------
+
+    fun loadMovieCategories(apiKey: String) {
         viewModelScope.launch {
-            _popularMovies.postValue(Resource.Loading())
+            val movieCategoryList = mutableListOf<MovieCategory>()
 
-            try {
-                val response = repository.getPopularMovies(apiKey, page)
-                _popularMovies.postValue(Resource.Success(response.results))
-            } catch (e: Exception) {
-                val errorMessage = when (e) {
-                    is HttpException -> "HTTP ${e.code()} ${e.message()}"
-                    is IOException -> "Network error. Check your connection."
-                    else -> e.localizedMessage ?: "Unknown error occurred"
-                }
-                _popularMovies.postValue(Resource.Error(errorMessage))
+            val popular = repository.getPopularMovies(apiKey, 1)
+            if (popular is Resource.Success) {
+                movieCategoryList.add(MovieCategory("Popular Movies", popular.data.results))
             }
+
+            val topRated = repository.getTopRatedMovies(apiKey, 1)
+            if (topRated is Resource.Success) {
+                movieCategoryList.add(MovieCategory("Top Rated Movies", topRated.data))
+            }
+
+            val upcoming = repository.getUpcomingMovies(apiKey, 1)
+            if (upcoming is Resource.Success) {
+                movieCategoryList.add(MovieCategory("Upcoming Movies", upcoming.data))
+            }
+
+            val trending = repository.getTrendingMovies(apiKey)
+            if (trending is Resource.Success) {
+                movieCategoryList.add(MovieCategory("Trending Movies", trending.data))
+            }
+
+            _movieCategories.postValue(movieCategoryList)
         }
     }
 
-    fun loadPopularSeries(apiKey: String, page: Int = 1) {
+    fun loadSeriesCategories(apiKey: String) {
         viewModelScope.launch {
-            try {
-                val response = repository.getPopularSeries(apiKey, page)
-                _popularSeries.postValue(response.results)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            val seriesCategoryList = mutableListOf<SeriesCategory>()
+
+            val popular = repository.getPopularSeries(apiKey, 1)
+            if (popular is Resource.Success) {
+                seriesCategoryList.add(SeriesCategory("Popular Series", popular.data))
             }
+
+            val topRated = repository.getTopRatedSeries(apiKey, 1)
+            if (topRated is Resource.Success) {
+                seriesCategoryList.add(SeriesCategory("Top Rated Series", topRated.data))
+            }
+
+            val upcoming = repository.getUpcomingSeries(apiKey, 1)
+            if (upcoming is Resource.Success) {
+                seriesCategoryList.add(SeriesCategory("Upcoming Series", upcoming.data))
+            }
+
+            val trending = repository.getTrendingSeries(apiKey)
+            if (trending is Resource.Success) {
+                seriesCategoryList.add(SeriesCategory("Trending Series", trending.data))
+            }
+
+            _seriesCategories.postValue(seriesCategoryList)
         }
     }
 
-   // fun getSavedMovies() = repository.getAllSavedMovies()
-
-    fun saveMovie(movie: MovieEntity) = viewModelScope.launch {
-        repository.insertMovie(movie)
-    }
-
-    fun deleteMovie(movie: MovieEntity) = viewModelScope.launch {
-        repository.deleteMovie(movie)
-    }
-
-    suspend fun isMovieSaved(id: Int): Boolean = withContext(Dispatchers.IO) {
-        repository.isMovieSaved(id)
+    // ------------------ Pagination: Popular Movies ------------------
+    fun loadPopularMovies(
+        apiKey: String,
+        page: Int,
+        callback: (MovieResponse?) -> Unit
+    ) {
+        viewModelScope.launch {
+            val response = repository.getPopularMovies(apiKey, page)
+            if (response is Resource.Success) {
+                callback(response.data) // <-- contains results, page, total_pages
+            } else {
+                callback(null)
+            }
+        }
     }
 }
+
+
+
