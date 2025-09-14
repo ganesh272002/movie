@@ -14,11 +14,13 @@ import com.example.movieseries.databinding.ItemMovieBinding
 class MoviesAdapter(
     private val fragment: Fragment,
     private val onFavoriteClick: (Movie, Boolean) -> Unit
-) : ListAdapter<Movie, MoviesAdapter.MovieViewHolder>(MovieDiffCallback()) {
+) : RecyclerView.Adapter<MoviesAdapter.MovieViewHolder>() {
+
+    private val movies = mutableListOf<Movie>()
 
     init { setHasStableIds(true) }
 
-    override fun getItemId(position: Int) = getItem(position).id.toLong()
+    override fun getItemId(position: Int) = movies[position].id.toLong()
 
     inner class MovieViewHolder(private val binding: ItemMovieBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -46,11 +48,24 @@ class MoviesAdapter(
     }
 
     override fun onBindViewHolder(holder: MovieViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(movies[position])
     }
 
-    class MovieDiffCallback : DiffUtil.ItemCallback<Movie>() {
-        override fun areItemsTheSame(oldItem: Movie, newItem: Movie) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: Movie, newItem: Movie) = oldItem == newItem
+    override fun getItemCount() = movies.size
+
+    // For first load
+    fun setItems(newMovies: List<Movie>) {
+        movies.clear()
+        movies.addAll(newMovies)
+        notifyDataSetChanged()
     }
+
+    // For pagination append
+    fun addItems(newMovies: List<Movie>) {
+        val start = movies.size
+        movies.addAll(newMovies)
+        notifyItemRangeInserted(start, newMovies.size)
+    }
+
+    fun currentItems(): List<Movie> = movies
 }

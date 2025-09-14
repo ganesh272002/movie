@@ -12,6 +12,7 @@ import com.example.movieseries.databinding.FragmentMovieBinding
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
+
 @AndroidEntryPoint
 class MovieFragment : Fragment() {
 
@@ -23,6 +24,7 @@ class MovieFragment : Fragment() {
 
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
 
+    // Pagination state (only for Popular Movies)
     private var currentPage = 1
     private var totalPages = 1
     private var isLoading = false
@@ -41,11 +43,11 @@ class MovieFragment : Fragment() {
         observeViewModel()
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            currentPage = 1
-            isLastPage = false
+            resetPagination()
             viewModel.loadMovieCategories(apiKey)
         }
 
+        // first load
         viewModel.loadMovieCategories(apiKey)
     }
 
@@ -62,9 +64,16 @@ class MovieFragment : Fragment() {
                     rating = movie.rating.toDouble(),
                     type = "movie"
                 )
-                if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
+                if (isSaved) {
+                    viewModel.saveItem(entity)
+                } else {
+                    viewModel.removeItem(entity)
+                }
             },
-            onLoadMore = { // horizontal pagination callback
+            isLastPage = { isLastPage },   // delegate to fragment’s state
+            isLoading = { isLoading },
+            // horizontal scroll pagination callback for "Popular Movies"
+            onLoadMore = {
                 if (!isLoading && !isLastPage) {
                     isLoading = true
                     currentPage++
@@ -79,6 +88,13 @@ class MovieFragment : Fragment() {
         }
     }
 
+    private fun resetPagination() {
+        currentPage = 1
+        totalPages = 1
+        isLoading = false
+        isLastPage = false
+    }
+
     private fun loadNextPage() {
         viewModel.loadPopularMovies(apiKey, currentPage) { response ->
             binding.swipeRefreshLayout.isRefreshing = false
@@ -86,23 +102,27 @@ class MovieFragment : Fragment() {
 
             response?.let {
                 totalPages = it.total_pages
+                isLastPage = currentPage >= totalPages
 
-                // Append new items to "Popular Movies" category
-                val currentList = categoryAdapter.currentList.toMutableList()
-                val index = currentList.indexOfFirst { c -> c.title == "Popular Movies" }
+                // Find Popular Movies row
+                val index = categoryAdapter.currentList.indexOfFirst { c -> c.title == "Popular Movies" }
                 if (index != -1) {
-                    val updatedCategory = currentList[index].copy(
-                        movies = currentList[index].movies + it.results
-                    )
-                    currentList[index] = updatedCategory
-                    categoryAdapter.submitList(currentList)
+                    // Get that row's ViewHolder
+                    val holder = binding.recyclerViewMovies.findViewHolderForAdapterPosition(index)
+                            as? MovieCategoryAdapter.CategoryViewHolder
+
+                    holder?.let { vh ->
+                        val movieAdapter = vh.binding.horizontalRecyclerView.adapter as MoviesAdapter
+                        movieAdapter.addItems(it.results)  // ✅ append items without reset
+                    }
                 }
             }
-            isLastPage = currentPage >= totalPages
         }
     }
 
+
     private fun observeViewModel() {
+        // Observe DB saved items
         viewModel.savedMovies.observe(viewLifecycleOwner) { savedList ->
             val savedIds = savedList.map { it.id }.toSet()
             val updatedCategories = categoryAdapter.currentList.map { category ->
@@ -113,6 +133,7 @@ class MovieFragment : Fragment() {
             categoryAdapter.submitList(updatedCategories)
         }
 
+        // Observe API categories
         viewModel.movieCategories.observe(viewLifecycleOwner) { categories ->
             val savedIds = viewModel.savedMovies.value?.map { it.id }?.toSet() ?: emptySet()
             val updatedCategories = categories.map { category ->
