@@ -56,7 +56,12 @@ data class SeriesCategory(
     val series: List<Series>
 )
 
-
+data class PaginationState(
+    var currentPage: Int = 1,
+    var totalPages: Int = 1,
+    var isLoading: Boolean = false,
+    var isLastPage: Boolean = false
+)
 
 
 

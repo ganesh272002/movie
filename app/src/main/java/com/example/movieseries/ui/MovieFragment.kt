@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.movieseries.data.PaginationState
 import com.example.movieseries.data.SavedItemEntity
 import com.example.movieseries.databinding.FragmentMovieBinding
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
 
 @AndroidEntryPoint
 class MovieFragment : Fragment() {
@@ -24,11 +24,8 @@ class MovieFragment : Fragment() {
 
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
 
-    // Pagination state (only for Popular Movies)
-    private var currentPage = 1
-    private var totalPages = 1
-    private var isLoading = false
-    private var isLastPage = false
+    // Track pagination state per category (title -> PaginationState)
+    private val paginationMap = mutableMapOf<String, PaginationState>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,11 +40,11 @@ class MovieFragment : Fragment() {
         observeViewModel()
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            resetPagination()
+            paginationMap.clear()
             viewModel.loadMovieCategories(apiKey)
         }
 
-        // first load
+        // initial load
         viewModel.loadMovieCategories(apiKey)
     }
 
@@ -64,20 +61,16 @@ class MovieFragment : Fragment() {
                     rating = movie.rating.toDouble(),
                     type = "movie"
                 )
-                if (isSaved) {
-                    viewModel.saveItem(entity)
-                } else {
-                    viewModel.removeItem(entity)
-                }
+                if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
             },
-            isLastPage = { isLastPage },   // delegate to fragment’s state
-            isLoading = { isLoading },
-            // horizontal scroll pagination callback for "Popular Movies"
-            onLoadMore = {
-                if (!isLoading && !isLastPage) {
-                    isLoading = true
-                    currentPage++
-                    loadNextPage()
+            isLastPage = { title -> paginationMap[title]?.isLastPage ?: false },
+            isLoading = { title -> paginationMap[title]?.isLoading ?: false },
+            onLoadMore = { title ->
+                val state = paginationMap.getOrPut(title) { PaginationState() }
+                if (!state.isLoading && !state.isLastPage) {
+                    state.isLoading = true
+                    state.currentPage++
+                    loadNextPage(title, state.currentPage)
                 }
             }
         )
@@ -88,38 +81,29 @@ class MovieFragment : Fragment() {
         }
     }
 
-    private fun resetPagination() {
-        currentPage = 1
-        totalPages = 1
-        isLoading = false
-        isLastPage = false
-    }
-
-    private fun loadNextPage() {
-        viewModel.loadPopularMovies(apiKey, currentPage) { response ->
+    private fun loadNextPage(categoryTitle: String, page: Int) {
+        viewModel.loadMoviesByCategory(apiKey, categoryTitle, page) { response ->
             binding.swipeRefreshLayout.isRefreshing = false
-            isLoading = false
+            val state = paginationMap[categoryTitle] ?: return@loadMoviesByCategory
+            state.isLoading = false
 
             response?.let {
-                totalPages = it.total_pages
-                isLastPage = currentPage >= totalPages
+                state.totalPages = it.total_pages
+                state.isLastPage = page >= state.totalPages
 
-                // Find Popular Movies row
-                val index = categoryAdapter.currentList.indexOfFirst { c -> c.title == "Popular Movies" }
+                // Find the row by category title
+                val index = categoryAdapter.currentList.indexOfFirst { c -> c.title == categoryTitle }
                 if (index != -1) {
-                    // Get that row's ViewHolder
                     val holder = binding.recyclerViewMovies.findViewHolderForAdapterPosition(index)
                             as? MovieCategoryAdapter.CategoryViewHolder
-
                     holder?.let { vh ->
                         val movieAdapter = vh.binding.horizontalRecyclerView.adapter as MoviesAdapter
-                        movieAdapter.addItems(it.results)  // ✅ append items without reset
+                        movieAdapter.addItems(it.results) // ✅ append items
                     }
                 }
             }
         }
     }
-
 
     private fun observeViewModel() {
         // Observe DB saved items

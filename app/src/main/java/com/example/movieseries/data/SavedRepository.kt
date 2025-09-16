@@ -28,28 +28,28 @@ class SavedRepository @Inject constructor(
         }
     }
 
-    suspend fun getTopRatedMovies(apiKey: String, page: Int): Resource<List<Movie>> {
+    suspend fun getTopRatedMovies(apiKey: String, page: Int): Resource<MovieResponse> {
         return try {
             val response = api.getTopRatedMovies(apiKey = apiKey, page = page)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
 
-    suspend fun getUpcomingMovies(apiKey: String, page: Int): Resource<List<Movie>> {
+    suspend fun getUpcomingMovies(apiKey: String, page: Int): Resource<MovieResponse> {
         return try {
             val response = api.getUpcomingMovies(apiKey = apiKey, page = page)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
 
-    suspend fun getTrendingMovies(apiKey: String): Resource<List<Movie>> {
+    suspend fun getTrendingMovies(apiKey: String): Resource<MovieResponse> {
         return try {
             val response = api.getTrendingMovies(apiKey = apiKey)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }

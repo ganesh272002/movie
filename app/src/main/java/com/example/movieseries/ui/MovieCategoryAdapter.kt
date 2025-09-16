@@ -12,13 +12,12 @@ import com.example.movieseries.data.Movie
 import com.example.movieseries.data.MovieCategory
 import com.example.movieseries.databinding.ItemCategoryBinding
 
-
 class MovieCategoryAdapter(
     private val fragment: Fragment,
     private val onFavoriteClick: (Movie, Boolean) -> Unit,
-    private val isLastPage: () -> Boolean,
-    private val isLoading: () -> Boolean,
-    private val onLoadMore: () -> Unit
+    private val isLastPage: (String) -> Boolean,
+    private val isLoading: (String) -> Boolean,
+    private val onLoadMore: (String) -> Unit
 ) : ListAdapter<MovieCategory, MovieCategoryAdapter.CategoryViewHolder>(DiffCallback()) {
 
     private val scrollStates = hashMapOf<Int, Parcelable?>()
@@ -43,28 +42,30 @@ class MovieCategoryAdapter(
         fun bind(category: MovieCategory) {
             binding.categoryTitle.text = category.title
 
-            val layoutManager = LinearLayoutManager(binding.root.context, LinearLayoutManager.HORIZONTAL, false)
+            val layoutManager = LinearLayoutManager(
+                binding.root.context,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
             binding.horizontalRecyclerView.layoutManager = layoutManager
 
             val adapter = MoviesAdapter(fragment, onFavoriteClick)
             binding.horizontalRecyclerView.adapter = adapter
             adapter.setItems(category.movies)
 
-            // restore scroll state if available
+            // restore scroll state
             scrollStates[bindingAdapterPosition]?.let {
                 layoutManager.onRestoreInstanceState(it)
             }
 
-            // attach pagination listener only for popular movies row
-            if (category.title == "Popular Movies") {
-                binding.horizontalRecyclerView.clearOnScrollListeners()
-                binding.horizontalRecyclerView.addOnScrollListener(object :
-                    PaginationScrollListener(layoutManager) {
-                    override fun isLastPage() = this@MovieCategoryAdapter.isLastPage()
-                    override fun isLoading() = this@MovieCategoryAdapter.isLoading()
-                    override fun loadMoreItems() = onLoadMore()
-                })
-            }
+            // attach pagination listener for every category
+            binding.horizontalRecyclerView.clearOnScrollListeners()
+            binding.horizontalRecyclerView.addOnScrollListener(object :
+                PaginationScrollListener(layoutManager) {
+                override fun isLastPage() = this@MovieCategoryAdapter.isLastPage(category.title)
+                override fun isLoading() = this@MovieCategoryAdapter.isLoading(category.title)
+                override fun loadMoreItems() = onLoadMore(category.title)
+            })
         }
 
         fun saveScrollState() {

@@ -53,17 +53,17 @@ class HomeViewModel @Inject constructor(
 
             val topRated = repository.getTopRatedMovies(apiKey, 1)
             if (topRated is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Top Rated Movies", topRated.data))
+                movieCategoryList.add(MovieCategory("Top Rated Movies", topRated.data.results))
             }
 
             val upcoming = repository.getUpcomingMovies(apiKey, 1)
             if (upcoming is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Upcoming Movies", upcoming.data))
+                movieCategoryList.add(MovieCategory("Upcoming Movies", upcoming.data.results))
             }
 
             val trending = repository.getTrendingMovies(apiKey)
             if (trending is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Trending Movies", trending.data))
+                movieCategoryList.add(MovieCategory("Trending Movies", trending.data.results))
             }
 
             _movieCategories.postValue(movieCategoryList)
@@ -98,22 +98,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ------------------ Pagination: Popular Movies ------------------
-    fun loadPopularMovies(
+    // ------------------ Pagination by Category ------------------
+    fun loadMoviesByCategory(
         apiKey: String,
+        category: String,
         page: Int,
         callback: (MovieResponse?) -> Unit
     ) {
         viewModelScope.launch {
-            val response = repository.getPopularMovies(apiKey, page)
-            if (response is Resource.Success) {
-                callback(response.data) // <-- contains results, page, total_pages
-            } else {
-                callback(null)
+            val response = when (category) {
+                "Popular Movies" -> repository.getPopularMovies(apiKey, page)
+                "Top Rated Movies" -> repository.getTopRatedMovies(apiKey, page)
+                "Upcoming Movies" -> repository.getUpcomingMovies(apiKey, page)
+                "Trending Movies" -> repository.getTrendingMovies(apiKey) // usually no page
+                else -> null
+            }
+            when (response) {
+                is Resource.Success -> callback(response.data)
+                else -> callback(null)
             }
         }
     }
 }
-
-
-
