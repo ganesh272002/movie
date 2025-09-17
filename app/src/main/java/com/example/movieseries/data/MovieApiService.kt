@@ -5,7 +5,7 @@ import retrofit2.http.Query
 
 interface MovieApiService {
 
-    // ----------------- Movies -----------------
+    //Movies
 
     @GET("movie/popular")
     suspend fun getPopularMovies(
@@ -32,7 +32,7 @@ interface MovieApiService {
     ): MovieResponse
 
 
-    // ----------------- Series -----------------
+    //Series
 
     @GET("tv/popular")
     suspend fun getPopularSeries(
@@ -57,4 +57,7 @@ interface MovieApiService {
     suspend fun getTrendingSeries(
         @Query("api_key") apiKey: String
     ): SeriesResponse
+
+
+
 }

@@ -15,16 +15,16 @@ fun loadImage(view: ImageView, url: String?) {
             .load("https://image.tmdb.org/t/p/w200" + url)
             .into(view)
     } else {
-        view.setImageDrawable(null) // or a placeholder
+        view.setImageDrawable(null)
     }
 }
 
 @BindingAdapter("heartIcon")
 fun setHeartIcon(view: ImageView, isSaved: Boolean) {
     val iconRes = if (isSaved) {
-        R.drawable.filled_heart   // your filled heart drawable
+        R.drawable.filled_heart
     } else {
-        R.drawable.not_filled_heart  // your outline heart drawable
+        R.drawable.not_filled_heart
     }
     view.setImageResource(iconRes)
 }

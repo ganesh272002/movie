@@ -42,7 +42,10 @@ data class MovieResponse(
 
 
 data class SeriesResponse(
-    val results: List<Series>
+    val page: Int,
+    val results: List<Series>,
+    val total_pages: Int,
+    val total_results: Int
 )
 
 
@@ -57,6 +60,13 @@ data class SeriesCategory(
 )
 
 data class PaginationState(
+    var currentPage: Int = 1,
+    var totalPages: Int = 1,
+    var isLoading: Boolean = false,
+    var isLastPage: Boolean = false
+)
+
+data class PaginationStateSeries(
     var currentPage: Int = 1,
     var totalPages: Int = 1,
     var isLoading: Boolean = false,

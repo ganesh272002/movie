@@ -4,8 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movieseries.data.Series
 import com.example.movieseries.databinding.ItemSeriesBinding
@@ -13,7 +11,13 @@ import com.example.movieseries.databinding.ItemSeriesBinding
 class SeriesAdapter(
     private val fragment: Fragment,
     private val onFavoriteClick: (Series, Boolean) -> Unit
-) : ListAdapter<Series, SeriesAdapter.SeriesViewHolder>(SeriesDiffCallback()) {
+) : RecyclerView.Adapter<SeriesAdapter.SeriesViewHolder>() {
+
+    private val seriesList = mutableListOf<Series>()
+
+    init { setHasStableIds(true) }
+
+    override fun getItemId(position: Int) = seriesList[position].id.toLong()
 
     inner class SeriesViewHolder(private val binding: ItemSeriesBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -42,23 +46,29 @@ class SeriesAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SeriesViewHolder {
-        val binding = ItemSeriesBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+        val binding = ItemSeriesBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return SeriesViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: SeriesViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(seriesList[position])
     }
 
-    class SeriesDiffCallback : DiffUtil.ItemCallback<Series>() {
-        override fun areItemsTheSame(oldItem: Series, newItem: Series): Boolean =
-            oldItem.id == newItem.id
+    override fun getItemCount() = seriesList.size
 
-        override fun areContentsTheSame(oldItem: Series, newItem: Series): Boolean =
-            oldItem == newItem
+    // First load
+    fun setItems(newSeries: List<Series>) {
+        seriesList.clear()
+        seriesList.addAll(newSeries)
+        notifyDataSetChanged()
     }
+
+    // Pagination append
+    fun addItems(newSeries: List<Series>) {
+        val start = seriesList.size
+        seriesList.addAll(newSeries)
+        notifyItemRangeInserted(start, newSeries.size)
+    }
+
+    fun currentItems(): List<Series> = seriesList
 }

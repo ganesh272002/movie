@@ -4,11 +4,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movieseries.data.Movie
-import com.example.movieseries.data.SavedItemEntity
 import com.example.movieseries.databinding.ItemMovieBinding
 
 class MoviesAdapter(
@@ -18,26 +15,34 @@ class MoviesAdapter(
 
     private val movies = mutableListOf<Movie>()
 
-    init { setHasStableIds(true) }
+    init {
+        setHasStableIds(true)
+    }
 
     override fun getItemId(position: Int) = movies[position].id.toLong()
 
     inner class MovieViewHolder(private val binding: ItemMovieBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
         fun bind(movie: Movie) {
             binding.movie = movie
             binding.isSaved = movie.isSaved
+
+            // Heart click
             binding.onHeartClick = View.OnClickListener {
                 val newState = !(binding.isSaved ?: false)
                 binding.isSaved = newState
                 binding.executePendingBindings()
                 onFavoriteClick(movie, newState)
             }
+
+            // Long press → bottom sheet
             binding.root.setOnLongClickListener {
                 MovieDetailsBottomSheet.newInstance(movie)
                     .show(fragment.parentFragmentManager, "MovieDetails")
                 true
             }
+
             binding.executePendingBindings()
         }
     }
@@ -53,14 +58,12 @@ class MoviesAdapter(
 
     override fun getItemCount() = movies.size
 
-    // For first load
     fun setItems(newMovies: List<Movie>) {
         movies.clear()
         movies.addAll(newMovies)
         notifyDataSetChanged()
     }
 
-    // For pagination append
     fun addItems(newMovies: List<Movie>) {
         val start = movies.size
         movies.addAll(newMovies)

@@ -16,7 +16,6 @@ class HomeViewModel @Inject constructor(
     private val repository: SavedRepository
 ) : ViewModel() {
 
-    // ------------------ Local Database ------------------
     val savedMovies: LiveData<List<SavedItemEntity>> = repository.getItemsByType("movie")
     val savedSeries: LiveData<List<SavedItemEntity>> = repository.getItemsByType("series")
 
@@ -32,73 +31,55 @@ class HomeViewModel @Inject constructor(
         return repository.isItemSaved(id, type)
     }
 
-    // ------------------ Remote API Categories ------------------
-
+    // ------------------ Movie categories ------------------
     private val _movieCategories = MutableLiveData<List<MovieCategory>>()
     val movieCategories: LiveData<List<MovieCategory>> = _movieCategories
 
     private val _seriesCategories = MutableLiveData<List<SeriesCategory>>()
     val seriesCategories: LiveData<List<SeriesCategory>> = _seriesCategories
 
-    // ------------------ Loaders ------------------
-
     fun loadMovieCategories(apiKey: String) {
         viewModelScope.launch {
-            val movieCategoryList = mutableListOf<MovieCategory>()
+            val list = mutableListOf<MovieCategory>()
 
-            val popular = repository.getPopularMovies(apiKey, 1)
-            if (popular is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Popular Movies", popular.data.results))
+            repository.getPopularMovies(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(MovieCategory("Popular Movies", (it as Resource.Success).data.results))
+            }
+            repository.getTopRatedMovies(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(MovieCategory("Top Rated Movies", (it as Resource.Success).data.results))
+            }
+            repository.getUpcomingMovies(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(MovieCategory("Upcoming Movies", (it as Resource.Success).data.results))
+            }
+            repository.getTrendingMovies(apiKey).takeIf { it is Resource.Success }?.let {
+                list.add(MovieCategory("Trending Movies", (it as Resource.Success).data.results))
             }
 
-            val topRated = repository.getTopRatedMovies(apiKey, 1)
-            if (topRated is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Top Rated Movies", topRated.data.results))
-            }
-
-            val upcoming = repository.getUpcomingMovies(apiKey, 1)
-            if (upcoming is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Upcoming Movies", upcoming.data.results))
-            }
-
-            val trending = repository.getTrendingMovies(apiKey)
-            if (trending is Resource.Success) {
-                movieCategoryList.add(MovieCategory("Trending Movies", trending.data.results))
-            }
-
-            _movieCategories.postValue(movieCategoryList)
+            _movieCategories.postValue(list)
         }
     }
 
     fun loadSeriesCategories(apiKey: String) {
         viewModelScope.launch {
-            val seriesCategoryList = mutableListOf<SeriesCategory>()
+            val list = mutableListOf<SeriesCategory>()
 
-            val popular = repository.getPopularSeries(apiKey, 1)
-            if (popular is Resource.Success) {
-                seriesCategoryList.add(SeriesCategory("Popular Series", popular.data))
+            repository.getPopularSeries(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(SeriesCategory("Popular Series", (it as Resource.Success).data.results))
+            }
+            repository.getTopRatedSeries(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(SeriesCategory("Top Rated Series", (it as Resource.Success).data.results))
+            }
+            repository.getUpcomingSeries(apiKey, 1).takeIf { it is Resource.Success }?.let {
+                list.add(SeriesCategory("Upcoming Series", (it as Resource.Success).data.results))
+            }
+            repository.getTrendingSeries(apiKey).takeIf { it is Resource.Success }?.let {
+                list.add(SeriesCategory("Trending Series", (it as Resource.Success).data.results))
             }
 
-            val topRated = repository.getTopRatedSeries(apiKey, 1)
-            if (topRated is Resource.Success) {
-                seriesCategoryList.add(SeriesCategory("Top Rated Series", topRated.data))
-            }
-
-            val upcoming = repository.getUpcomingSeries(apiKey, 1)
-            if (upcoming is Resource.Success) {
-                seriesCategoryList.add(SeriesCategory("Upcoming Series", upcoming.data))
-            }
-
-            val trending = repository.getTrendingSeries(apiKey)
-            if (trending is Resource.Success) {
-                seriesCategoryList.add(SeriesCategory("Trending Series", trending.data))
-            }
-
-            _seriesCategories.postValue(seriesCategoryList)
+            _seriesCategories.postValue(list)
         }
     }
 
-    // ------------------ Pagination by Category ------------------
     fun loadMoviesByCategory(
         apiKey: String,
         category: String,
@@ -110,13 +91,47 @@ class HomeViewModel @Inject constructor(
                 "Popular Movies" -> repository.getPopularMovies(apiKey, page)
                 "Top Rated Movies" -> repository.getTopRatedMovies(apiKey, page)
                 "Upcoming Movies" -> repository.getUpcomingMovies(apiKey, page)
-                "Trending Movies" -> repository.getTrendingMovies(apiKey) // usually no page
+                "Trending Movies" -> repository.getTrendingMovies(apiKey)
                 else -> null
             }
-            when (response) {
-                is Resource.Success -> callback(response.data)
-                else -> callback(null)
+            if (response is Resource.Success) {
+                callback(response.data)
+            } else {
+                callback(null)
             }
         }
+    }
+
+    fun loadSeriesByCategory(
+        apiKey: String,
+        category: String,
+        page: Int,
+        callback: (SeriesResponse?) -> Unit
+    ) {
+        viewModelScope.launch {
+            val response = when (category) {
+                "Popular Series" -> repository.getPopularSeries(apiKey, page)
+                "Top Rated Series" -> repository.getTopRatedSeries(apiKey, page)
+                "Upcoming Series" -> repository.getUpcomingSeries(apiKey, page)
+                "Trending Series" -> repository.getTrendingSeries(apiKey)
+                else -> null
+            }
+            if (response is Resource.Success) callback(response.data) else callback(null)
+        }
+    }
+
+    // ------------------ Search ------------------
+    private val _searchResultsMovies = MutableLiveData<List<Movie>>()
+    val searchResultsMovies: LiveData<List<Movie>> = _searchResultsMovies
+
+    fun searchMoviesLocally(query: String) {
+        if (query.isBlank()) {
+            _searchResultsMovies.postValue(emptyList())
+            return
+        }
+
+        val allMovies = _movieCategories.value?.flatMap { it.movies } ?: emptyList()
+        val filtered = allMovies.filter { it.title?.contains(query, ignoreCase = true) == true }
+        _searchResultsMovies.postValue(filtered)
     }
 }

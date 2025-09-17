@@ -56,39 +56,43 @@ class SavedRepository @Inject constructor(
     }
 
     // ---- Remote (Series) ----
-    suspend fun getPopularSeries(apiKey: String, page: Int): Resource<List<Series>> {
+    suspend fun getPopularSeries(apiKey: String, page: Int): Resource<SeriesResponse> {
         return try {
             val response = api.getPopularSeries(apiKey = apiKey, page = page)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
 
-    suspend fun getTopRatedSeries(apiKey: String, page: Int): Resource<List<Series>> {
+    suspend fun getTopRatedSeries(apiKey: String, page: Int): Resource<SeriesResponse> {
         return try {
             val response = api.getTopRatedSeries(apiKey = apiKey, page = page)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
 
-    suspend fun getUpcomingSeries(apiKey: String, page: Int): Resource<List<Series>> {
+    suspend fun getUpcomingSeries(apiKey: String, page: Int): Resource<SeriesResponse> {
         return try {
             val response = api.getUpcomingSeries(apiKey = apiKey, page = page)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
 
-    suspend fun getTrendingSeries(apiKey: String): Resource<List<Series>> {
+    suspend fun getTrendingSeries(apiKey: String): Resource<SeriesResponse> {
         return try {
             val response = api.getTrendingSeries(apiKey = apiKey)
-            Resource.Success(response.results)
+            Resource.Success(response)
         } catch (e: Exception) {
             Resource.Error(e.localizedMessage ?: "An error occurred")
         }
     }
+
+
+
+
 }

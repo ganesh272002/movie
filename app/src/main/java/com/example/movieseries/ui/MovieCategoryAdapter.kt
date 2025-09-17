@@ -58,7 +58,7 @@ class MovieCategoryAdapter(
                 layoutManager.onRestoreInstanceState(it)
             }
 
-            // attach pagination listener for every category
+            // pagination listener for horizontal list
             binding.horizontalRecyclerView.clearOnScrollListeners()
             binding.horizontalRecyclerView.addOnScrollListener(object :
                 PaginationScrollListener(layoutManager) {

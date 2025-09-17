@@ -40,6 +40,25 @@ class SavedFragment : Fragment() {
         observeSavedItems()
     }
 
+    //search
+//    fun searchSeries(query: String) {
+//        if (query.isNotEmpty()) {
+//            viewModel.searchSeries(query).observe(viewLifecycleOwner) { results ->
+//                if (results.isNotEmpty()) {
+//                    binding.recyclerViewSearchResults.visibility = View.VISIBLE
+//                    searchAdapter.setItems(results)
+//                    binding.recyclerViewSeries.visibility = View.GONE
+//                } else {
+//                    binding.recyclerViewSearchResults.visibility = View.GONE
+//                    binding.recyclerViewSeries.visibility = View.VISIBLE
+//                }
+//            }
+//        } else {
+//            binding.recyclerViewSearchResults.visibility = View.GONE
+//            binding.recyclerViewSeries.visibility = View.VISIBLE
+//        }
+//    }
+
     private fun setupMoviesRecycler() {
         savedMoviesAdapter = SavedItemsAdapter(
             onRemoveClick = { item -> removeFromSaved(item) },
