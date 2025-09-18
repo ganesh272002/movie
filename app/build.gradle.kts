@@ -103,7 +103,8 @@ dependencies {
     // SSP for scalable sp
     implementation ("com.intuit.ssp:ssp-android:1.1.1")
 
-  //  implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
+    //splashscreen
+    implementation("androidx.core:core-splashscreen:1.0.0")
 
 
 }

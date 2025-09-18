@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Query
 import com.example.movieseries.data.*
 import com.example.movieseries.data.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,11 +28,9 @@ class HomeViewModel @Inject constructor(
         repository.deleteItem(item)
     }
 
-    suspend fun isItemSaved(id: Int, type: String): Boolean {
-        return repository.isItemSaved(id, type)
-    }
 
-    // ------------------ Movie categories ------------------
+
+    //Movie categories
     private val _movieCategories = MutableLiveData<List<MovieCategory>>()
     val movieCategories: LiveData<List<MovieCategory>> = _movieCategories
 
@@ -120,18 +119,47 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ------------------ Search ------------------
+
+    //touch
+    private val _touchInsideRecycler = MutableLiveData<Boolean>()
+    val touchInsideRecycler: LiveData<Boolean> = _touchInsideRecycler
+
+    fun setTouchInsideRecycler(isInside: Boolean) {
+        _touchInsideRecycler.value = isInside
+    }
+
+
+
+    //Search
     private val _searchResultsMovies = MutableLiveData<List<Movie>>()
     val searchResultsMovies: LiveData<List<Movie>> = _searchResultsMovies
 
-    fun searchMoviesLocally(query: String) {
-        if (query.isBlank()) {
-            _searchResultsMovies.postValue(emptyList())
-            return
+    private val _searchResultsSeries = MutableLiveData<List<Series>>()
+    val searchResultsSeries: LiveData<List<Series>> = _searchResultsSeries
+
+
+    fun searchMovie(query: String) {
+        val allMovies = movieCategories.value?.flatMap { it.movies } ?: emptyList()
+        val allSeries = seriesCategories.value?.flatMap { it.series }?: emptyList()
+
+        val filteredSeries = allSeries.filter {
+            it.name?.contains(query, ignoreCase = true) == true
+        }
+        val filtered = allMovies.filter {
+            it.title?.contains(query, ignoreCase = true) == true
         }
 
-        val allMovies = _movieCategories.value?.flatMap { it.movies } ?: emptyList()
-        val filtered = allMovies.filter { it.title?.contains(query, ignoreCase = true) == true }
         _searchResultsMovies.postValue(filtered)
+        _searchResultsSeries.postValue(filteredSeries)
     }
+
+
+
+    fun clearSearch() {
+        _searchResultsMovies.postValue(emptyList())
+        _searchResultsSeries.postValue(emptyList())
+    }
+
+
+
 }

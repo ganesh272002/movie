@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="4dp"
             android:textSize="16sp"
-            android:text='@{"Rating: " + String.valueOf(movie.rating)}' />
+            android:text='@{"Rating: " + String.format("%.1f", movie.rating)}' />
 
         <TextView
             android:id="@+id/textOverview"

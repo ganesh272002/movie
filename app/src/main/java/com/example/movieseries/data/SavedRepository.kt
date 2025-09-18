@@ -9,7 +9,7 @@ class SavedRepository @Inject constructor(
     private val dao: SavedItemDao,
     private val api: MovieApiService
 ) {
-    // ---- Local (Database) ----
+
     fun getItemsByType(type: String) = dao.getItemsByType(type)
     fun getSavedMovies() = dao.getAllSavedMovies()
     fun getSavedSeries() = dao.getAllSavedSeries()
@@ -18,7 +18,7 @@ class SavedRepository @Inject constructor(
     suspend fun deleteItem(item: SavedItemEntity) = dao.deleteItem(item)
     suspend fun isItemSaved(id: Int, type: String) = dao.isItemSaved(id, type)
 
-    // ---- Remote (Movies) ----
+
     suspend fun getPopularMovies(apiKey: String, page: Int): Resource<MovieResponse> {
         return try {
             val response = api.getPopularMovies(apiKey = apiKey, page = page)
@@ -55,7 +55,7 @@ class SavedRepository @Inject constructor(
         }
     }
 
-    // ---- Remote (Series) ----
+
     suspend fun getPopularSeries(apiKey: String, page: Int): Resource<SeriesResponse> {
         return try {
             val response = api.getPopularSeries(apiKey = apiKey, page = page)

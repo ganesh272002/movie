@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.example.movieseries.data.Movie
+import com.example.movieseries.data.Series
 import com.example.movieseries.databinding.ItemMovieBinding
 
 class MoviesAdapter(
@@ -28,7 +29,7 @@ class MoviesAdapter(
             binding.movie = movie
             binding.isSaved = movie.isSaved
 
-            // Heart click
+            //Heartclick
             binding.onHeartClick = View.OnClickListener {
                 val newState = !(binding.isSaved ?: false)
                 binding.isSaved = newState
@@ -36,7 +37,7 @@ class MoviesAdapter(
                 onFavoriteClick(movie, newState)
             }
 
-            // Long press → bottom sheet
+
             binding.root.setOnLongClickListener {
                 MovieDetailsBottomSheet.newInstance(movie)
                     .show(fragment.parentFragmentManager, "MovieDetails")
@@ -44,6 +45,7 @@ class MoviesAdapter(
             }
 
             binding.executePendingBindings()
+
         }
     }
 
@@ -64,11 +66,15 @@ class MoviesAdapter(
         notifyDataSetChanged()
     }
 
+
+
     fun addItems(newMovies: List<Movie>) {
         val start = movies.size
         movies.addAll(newMovies)
         notifyItemRangeInserted(start, newMovies.size)
     }
 
-    fun currentItems(): List<Movie> = movies
+    fun getItems(): List<Movie> = movies
+
+
 }

@@ -1,10 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/homeFragment"
-        android:title="Home"
-        android:icon="@drawable/outline_heart_check_24" />
+        android:title="HomeMenu"
+        android:icon="@drawable/outline_home_24" />
     <item
         android:id="@+id/savedFragment"
-        android:title="Saved"
-        android:icon="@drawable/outline_heart_check_24" />
+        android:title="SavedMenu"
+        android:icon="@drawable/outline_family_home_24" />
 </menu>

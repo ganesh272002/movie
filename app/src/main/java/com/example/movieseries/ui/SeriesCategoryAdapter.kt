@@ -2,12 +2,14 @@ package com.example.movieseries.ui
 
 import android.os.Parcelable
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import com.example.movieseries.data.PaginationState
 import com.example.movieseries.data.Series
 import com.example.movieseries.data.SeriesCategory
@@ -52,20 +54,38 @@ class SeriesCategoryAdapter(
 
             val adapter = SeriesAdapter(fragment, onFavoriteClick)
             binding.horizontalRecyclerView.adapter = adapter
-            adapter.setItems(category.series) // ✅ submit series list
+            adapter.setItems(category.series)
 
-            // restore scroll state
+
             scrollStates[bindingAdapterPosition]?.let {
                 layoutManager.onRestoreInstanceState(it)
             }
 
-            // attach pagination listener
+            //pagination
             binding.horizontalRecyclerView.clearOnScrollListeners()
             binding.horizontalRecyclerView.addOnScrollListener(object :
                 PaginationScrollListener(layoutManager) {
                 override fun isLastPage() = this@SeriesCategoryAdapter.isLastPage(category.title)
                 override fun isLoading() = this@SeriesCategoryAdapter.isLoading(category.title)
                 override fun loadMoreItems() = onLoadMore(category.title)
+            })
+
+            //ViewPager
+            binding.horizontalRecyclerView.addOnItemTouchListener(object : OnItemTouchListener {
+                override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                    val action = e.getAction()
+                    when (action) {
+                        MotionEvent.ACTION_MOVE -> rv.getParent()
+                            .requestDisallowInterceptTouchEvent(true)
+                    }
+                    return false
+                }
+
+                override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+                }
+
+                override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+                }
             })
         }
 

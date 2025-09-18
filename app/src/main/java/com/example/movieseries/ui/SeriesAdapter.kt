@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.example.movieseries.data.Movie
 import com.example.movieseries.data.Series
 import com.example.movieseries.databinding.ItemSeriesBinding
 
@@ -56,19 +57,19 @@ class SeriesAdapter(
 
     override fun getItemCount() = seriesList.size
 
-    // First load
+
     fun setItems(newSeries: List<Series>) {
         seriesList.clear()
         seriesList.addAll(newSeries)
         notifyDataSetChanged()
     }
 
-    // Pagination append
+
     fun addItems(newSeries: List<Series>) {
         val start = seriesList.size
         seriesList.addAll(newSeries)
         notifyItemRangeInserted(start, newSeries.size)
     }
 
-    fun currentItems(): List<Series> = seriesList
+    fun getItems(): List<Series> = seriesList
 }

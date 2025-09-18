@@ -2,18 +2,22 @@ package com.example.movieseries.ui
 
 import android.os.Parcelable
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.OnItemTouchListener
 import com.example.movieseries.data.Movie
 import com.example.movieseries.data.MovieCategory
 import com.example.movieseries.databinding.ItemCategoryBinding
+import com.example.movieseries.viewmodel.HomeViewModel
 
 class MovieCategoryAdapter(
     private val fragment: Fragment,
+    private val viewModel: HomeViewModel,
     private val onFavoriteClick: (Movie, Boolean) -> Unit,
     private val isLastPage: (String) -> Boolean,
     private val isLoading: (String) -> Boolean,
@@ -21,6 +25,10 @@ class MovieCategoryAdapter(
 ) : ListAdapter<MovieCategory, MovieCategoryAdapter.CategoryViewHolder>(DiffCallback()) {
 
     private val scrollStates = hashMapOf<Int, Parcelable?>()
+
+
+
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
         val binding = ItemCategoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -42,31 +50,48 @@ class MovieCategoryAdapter(
         fun bind(category: MovieCategory) {
             binding.categoryTitle.text = category.title
 
-            val layoutManager = LinearLayoutManager(
-                binding.root.context,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
+            val layoutManager = LinearLayoutManager(binding.root.context, LinearLayoutManager.HORIZONTAL, false)
             binding.horizontalRecyclerView.layoutManager = layoutManager
 
             val adapter = MoviesAdapter(fragment, onFavoriteClick)
             binding.horizontalRecyclerView.adapter = adapter
             adapter.setItems(category.movies)
 
-            // restore scroll state
-            scrollStates[bindingAdapterPosition]?.let {
-                layoutManager.onRestoreInstanceState(it)
-            }
+            scrollStates[bindingAdapterPosition]?.let { layoutManager.onRestoreInstanceState(it) }
 
-            // pagination listener for horizontal list
             binding.horizontalRecyclerView.clearOnScrollListeners()
-            binding.horizontalRecyclerView.addOnScrollListener(object :
-                PaginationScrollListener(layoutManager) {
+            binding.horizontalRecyclerView.addOnScrollListener(object : PaginationScrollListener(layoutManager) {
                 override fun isLastPage() = this@MovieCategoryAdapter.isLastPage(category.title)
                 override fun isLoading() = this@MovieCategoryAdapter.isLoading(category.title)
                 override fun loadMoreItems() = onLoadMore(category.title)
             })
+
+
+
+            //ViewPager
+            binding.horizontalRecyclerView.addOnItemTouchListener(object : OnItemTouchListener {
+                override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                    val action = e.getAction()
+                    when (action) {
+                        MotionEvent.ACTION_MOVE -> rv.getParent()
+                            .requestDisallowInterceptTouchEvent(true)
+                    }
+                    return false
+                }
+
+                override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+                }
+
+                override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+                }
+            })
+
+
+
         }
+
+
+
 
         fun saveScrollState() {
             val lm = binding.horizontalRecyclerView.layoutManager

@@ -5,7 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GravityCompat
+
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
@@ -17,6 +17,8 @@ import com.example.movieseries.databinding.ActivityMainBinding
 import com.example.movieseries.ui.MovieFragment
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.appcompat.widget.SearchView
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -26,13 +28,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfig: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
+
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
+        binding.searchView.queryHint = "Search movies or series..."
+
+
         setSupportActionBar(binding.toolbar)
+
+
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -47,47 +56,48 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav.setupWithNavController(navController)
         binding.navigationView.setupWithNavController(navController)
 
-        // Search listener
-        binding.searchView.setOnQueryTextListener(object :
-            androidx.appcompat.widget.SearchView.OnQueryTextListener {
+
+
+        //Search listener
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                Toast.makeText(this@MainActivity, "Submit: $query", Toast.LENGTH_SHORT).show()
+                query?.let { viewModel.searchMovie(it) }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                Toast.makeText(this@MainActivity, "Change: $newText", Toast.LENGTH_SHORT).show()
+                newText?.let { viewModel.searchMovie(it) }
+
+
+                if (newText.isNullOrEmpty()) {
+                    getMovieFragment()?.hideSearchResults()
+                    viewModel.clearSearch()
+                }
                 return true
             }
         })
 
+
+        binding.searchView.setOnCloseListener {
+            getMovieFragment()?.hideSearchResults()
+            viewModel.clearSearch()
+            false
+        }
+
     }
 
-    private fun searchCurrentFragment(query: String) {
+
+    private fun getMovieFragment(): MovieFragment? {
         val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val currentFragment = navHostFragment.childFragmentManager.fragments.firstOrNull()
-
-        Log.d("MainActivity", "Current fragment: ${currentFragment?.javaClass?.simpleName}")
-
-        if (currentFragment is MovieFragment) {
-            Log.d("MainActivity", "Searching in MovieFragment: $query")
-            currentFragment.searchMovies(query)
-        } else {
-            Log.d("MainActivity", "No matching fragment found for search")
-        }
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+        return navHostFragment?.childFragmentManager
+            ?.fragments
+            ?.filterIsInstance<MovieFragment>()
+            ?.firstOrNull()
     }
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment)
         return navController.navigateUp(appBarConfig) || super.onSupportNavigateUp()
-    }
-
-    override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
     }
 }

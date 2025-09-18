@@ -1,6 +1,6 @@
 package com.example.movieseries.data
 
-import android.os.Message
+
 
 sealed class Resource<T> {
     class Loading<T> : Resource<T>() // <-- Make it generic

@@ -5,11 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.movieseries.data.PaginationState
 import com.example.movieseries.data.SavedItemEntity
-import com.example.movieseries.data.Series
+
 import com.example.movieseries.databinding.FragmentSeriesBinding
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,12 +21,13 @@ class SeriesFragment : Fragment() {
     private var _binding: FragmentSeriesBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: HomeViewModel by activityViewModels()
     private lateinit var categoryAdapter: SeriesCategoryAdapter
+    private lateinit var searchAdapter: SeriesAdapter
 
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
 
-    // category title -> pagination state
+    //paginationstate
     private val paginationMap = mutableMapOf<String, PaginationState>()
 
     override fun onCreateView(
@@ -75,9 +77,30 @@ class SeriesFragment : Fragment() {
             }
         )
 
+        //Searchadapter
+        searchAdapter = SeriesAdapter(this) { series, isSaved ->
+            val entity = SavedItemEntity(
+                id = series.id,
+                title = null,
+                name = series.name ?: "",
+                overview = series.overview,
+                posterPath = series.posterPath,
+                rating = series.rating.toDouble(),
+                type = "series",
+
+            )
+            if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
+        }
+
         binding.recyclerViewSeries.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = categoryAdapter
+        }
+
+        //search
+        binding.recyclerViewSearchResults.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = searchAdapter
         }
     }
 
@@ -106,15 +129,25 @@ class SeriesFragment : Fragment() {
 
 
     private fun observeViewModel() {
+
         viewModel.savedSeries.observe(viewLifecycleOwner) { savedList ->
             val savedIds = savedList.map { it.id }.toSet()
+
+
             val updatedCategories = categoryAdapter.currentList.map { category ->
                 category.copy(
                     series = category.series.map { it.copy(isSaved = savedIds.contains(it.id)) }
                 )
             }
             categoryAdapter.submitList(updatedCategories)
+
+
+            val updatedSearch = searchAdapter.getItems().map { series ->
+                series.copy(isSaved = savedIds.contains(series.id))
+            }
+            searchAdapter.setItems(updatedSearch)
         }
+
 
         viewModel.seriesCategories.observe(viewLifecycleOwner) { categories ->
             val savedIds = viewModel.savedSeries.value?.map { it.id }?.toSet() ?: emptySet()
@@ -126,7 +159,26 @@ class SeriesFragment : Fragment() {
             binding.swipeRefreshLayout.isRefreshing = false
             categoryAdapter.submitList(updatedCategories)
         }
+
+
+        viewModel.searchResultsSeries.observe(viewLifecycleOwner) { results ->
+            if (results.isNotEmpty()) {
+                val savedIds = viewModel.savedSeries.value?.map { it.id }?.toSet() ?: emptySet()
+                val uniqueResults = results.distinctBy { it.id }
+                    .map { it.copy(isSaved = savedIds.contains(it.id)) }
+
+                binding.recyclerViewSearchResults.visibility = View.VISIBLE
+                binding.recyclerViewSeries.visibility = View.GONE
+                searchAdapter.setItems(uniqueResults)
+            } else {
+                binding.recyclerViewSearchResults.visibility = View.GONE
+                binding.recyclerViewSeries.visibility = View.VISIBLE
+            }
+        }
     }
+
+
+
 
     override fun onDestroyView() {
         super.onDestroyView()

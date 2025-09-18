@@ -20,8 +20,9 @@
         android:layout_width="140dp"
         android:layout_height="220dp"
         android:layout_margin="8dp"
-        android:radius="16dp"
-        android:elevation="6dp">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="6dp"
+        app:cardBackgroundColor="@android:color/white">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -41,23 +42,24 @@
                     app:imageUrl="@{series.posterPath}" />
             </FrameLayout>
 
-            <!-- Row: Heart + Title -->
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <!-- Heart icon -->
+
                 <ImageView
                     android:id="@+id/heartIcon"
                     android:layout_width="30sp"
                     android:layout_height="30sp"
-                    android:layout_gravity="top|end"
+                    android:padding="2sp"
+
                     android:onClick="@{onHeartClick}"
                     app:heartIcon="@{isSaved}" />
 
-                <!-- Title -->
+
                 <TextView
                     android:id="@+id/textTitle"
                     android:layout_width="match_parent"

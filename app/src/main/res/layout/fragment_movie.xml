@@ -13,12 +13,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Use FrameLayout to stack the two lists -->
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Search results list -->
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewSearchResults"
                 android:layout_width="match_parent"
@@ -26,9 +26,9 @@
                 android:visibility="gone"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
-                android:scrollbars="vertical" />
+                android:scrollbars="horizontal" />
 
-            <!-- Default category list (vertical list of sections, each section has a horizontal RV) -->
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewMovies"
                 android:layout_width="match_parent"

@@ -2,11 +2,14 @@ package com.example.movieseries.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
+
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.R
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+
 import com.example.movieseries.data.PaginationState
 import com.example.movieseries.data.SavedItemEntity
 import com.example.movieseries.databinding.FragmentMovieBinding
@@ -16,6 +19,8 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MovieFragment : Fragment() {
 
+
+
     private var _binding: FragmentMovieBinding? = null
     private val binding get() = _binding!!
 
@@ -24,6 +29,8 @@ class MovieFragment : Fragment() {
 
     private val viewModel: HomeViewModel by activityViewModels()
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
+
+
 
     private val paginationMap = mutableMapOf<String, PaginationState>()
 
@@ -48,14 +55,11 @@ class MovieFragment : Fragment() {
         viewModel.loadMovieCategories(apiKey)
     }
 
-    fun searchMovies(query: String) {
-        viewModel.searchMoviesLocally(query)
-    }
-
     private fun setupRecyclerView() {
-        // Category adapter (default view)
+        //Category
         categoryAdapter = MovieCategoryAdapter(
             fragment = this,
+            viewModel = viewModel,
             onFavoriteClick = { movie, isSaved ->
                 val entity = SavedItemEntity(
                     id = movie.id,
@@ -80,7 +84,7 @@ class MovieFragment : Fragment() {
             }
         )
 
-        // Search adapter (shown when searching)
+        //Search
         searchAdapter = MoviesAdapter(this) { movie, isSaved ->
             val entity = SavedItemEntity(
                 id = movie.id,
@@ -94,17 +98,22 @@ class MovieFragment : Fragment() {
             if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
         }
 
-        // Outer categories list → vertical
+
+
         binding.recyclerViewMovies.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             adapter = categoryAdapter
         }
 
-        // Search results → vertical
+
         binding.recyclerViewSearchResults.apply {
-            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = searchAdapter
         }
+
+
+
+
     }
 
     private fun loadNextPage(categoryTitle: String, page: Int) {
@@ -127,18 +136,27 @@ class MovieFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        // Saved movies (update heart state)
+
         viewModel.savedMovies.observe(viewLifecycleOwner) { savedList ->
             val savedIds = savedList.map { it.id }.toSet()
+
+
             val updatedCategories = categoryAdapter.currentList.map { category ->
                 category.copy(
                     movies = category.movies.map { it.copy(isSaved = savedIds.contains(it.id)) }
                 )
             }
             categoryAdapter.submitList(updatedCategories)
+
+
+            val updatedSearch = searchAdapter.getItems().map { movie ->
+                movie.copy(isSaved = savedIds.contains(movie.id))
+            }
+            searchAdapter.setItems(updatedSearch)
+
         }
 
-        // Categories (default list)
+
         viewModel.movieCategories.observe(viewLifecycleOwner) { categories ->
             val savedIds = viewModel.savedMovies.value?.map { it.id }?.toSet() ?: emptySet()
             val updatedCategories = categories.map { category ->
@@ -149,17 +167,34 @@ class MovieFragment : Fragment() {
             categoryAdapter.submitList(updatedCategories)
         }
 
-        // Search results
+
         viewModel.searchResultsMovies.observe(viewLifecycleOwner) { results ->
-            if (results.isNotEmpty()) {
+            val savedIds = viewModel.savedMovies.value?.map { it.id }?.toSet() ?: emptySet()
+
+            val uniqueResults = results
+                .distinctBy { it.id } // remove duplicates
+                .map { it.copy(isSaved = savedIds.contains(it.id)) } // sync saved state
+
+            if (uniqueResults.isNotEmpty()) {
                 binding.recyclerViewSearchResults.visibility = View.VISIBLE
                 binding.recyclerViewMovies.visibility = View.GONE
-                searchAdapter.setItems(results)
+                searchAdapter.setItems(uniqueResults)
             } else {
                 binding.recyclerViewSearchResults.visibility = View.GONE
                 binding.recyclerViewMovies.visibility = View.VISIBLE
             }
         }
+
+//        viewModel.touchInsideRecycler.observe(viewLifecycleOwner) { isInside ->
+//            binding.viewPager.isUserInputEnabled = !isInside
+//        }
+
+
+    }
+
+    fun hideSearchResults() {
+        binding.recyclerViewSearchResults.visibility = View.GONE
+        binding.recyclerViewMovies.visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {

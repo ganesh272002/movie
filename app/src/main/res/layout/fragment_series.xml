@@ -22,9 +22,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="@dimen/_10sdp">
+                >
 
-                <!-- Series Section -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewSearchResults"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="horizontal" />
+
+
 
 
                 <androidx.recyclerview.widget.RecyclerView
