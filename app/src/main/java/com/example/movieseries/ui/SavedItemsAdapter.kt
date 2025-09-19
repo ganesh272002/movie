@@ -26,7 +26,10 @@ class SavedItemsAdapter(
             }
 
 
-            binding.root.setOnLongClickListener {
+
+
+
+            binding.root.setOnClickListener {
                 onItemLongClick(item)
                 true
             }

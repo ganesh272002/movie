@@ -119,17 +119,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
-    //touch
-    private val _touchInsideRecycler = MutableLiveData<Boolean>()
-    val touchInsideRecycler: LiveData<Boolean> = _touchInsideRecycler
-
-    fun setTouchInsideRecycler(isInside: Boolean) {
-        _touchInsideRecycler.value = isInside
-    }
-
-
-
     //Search
     private val _searchResultsMovies = MutableLiveData<List<Movie>>()
     val searchResultsMovies: LiveData<List<Movie>> = _searchResultsMovies

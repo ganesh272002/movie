@@ -5,46 +5,90 @@
         <variable
             name="series"
             type="com.example.movieseries.data.Series" />
+   <variable
+       name="isSaved"
+       type="Boolean" />
     </data>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/imagePoster"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
-            android:scaleType="centerCrop"
-            android:background="@android:color/darker_gray"
-            app:imageUrl="@{series.posterPath}" />
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:background="@android:color/white">
 
-        <TextView
-            android:id="@+id/textTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:paddingTop="8dp"
-            android:text='@{series.name}' />
+            <!-- Top row: Cross + Title -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/textRating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:textSize="16sp"
-            android:text='@{"Rating: " + String.valueOf(series.rating)}' />
 
-        <TextView
-            android:id="@+id/textOverview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:textSize="14sp"
-            android:text='@{series.overview}' />
 
-    </LinearLayout>
+                <TextView
+                    android:id="@+id/textTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:paddingStart="8dp"
+                    android:text='@{series.name}' />
+
+                <ImageView
+                    android:id="@+id/imageClose"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="4dp"
+                    android:src="@drawable/outline_cancel_24"
+                    android:contentDescription="Close" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imagePoster"
+                android:layout_width="match_parent"
+                android:layout_height="500dp"
+                android:scaleType="centerCrop"
+                android:background="@android:color/darker_gray"
+                app:imageUrl="@{series.posterPath}" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="8dp">
+
+                <TextView
+                    android:id="@+id/textRating"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text='@{"Rating: " + String.format("%.1f", series.rating)}'
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:id="@+id/imageHeart"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="4dp"
+                    app:heartIcon="@{isSaved}" />
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/textOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:textSize="14sp"
+                android:text='@{series.overview}' />
+
+        </LinearLayout>
+    </FrameLayout>
 </layout>

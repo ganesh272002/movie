@@ -18,7 +18,7 @@ import com.example.movieseries.ui.MovieFragment
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.appcompat.widget.SearchView
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfig: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        //installSplashScreen()
         super.onCreate(savedInstanceState)
 
 

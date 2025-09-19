@@ -10,7 +10,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/outline_movie_info_24"
-        android:label="@string/app_name"
+        android:label="MSInfo"
         android:roundIcon="@drawable/outline_movie_info_24"
         android:supportsRtl="true"
         android:theme="@style/Theme.MovieSeries"

@@ -19,7 +19,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by activityViewModels()
+    //private val viewModel: HomeViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,9 +44,9 @@ class HomeFragment : Fragment() {
 
 
         //viewPager
-        viewModel.touchInsideRecycler.observe(viewLifecycleOwner) { isInside ->
-            binding.viewPager.isUserInputEnabled = isInside
-        }
+//        viewModel.touchInsideRecycler.observe(viewLifecycleOwner) { isInside ->
+//            binding.viewPager.isUserInputEnabled = isInside
+//        }
 
     }
 

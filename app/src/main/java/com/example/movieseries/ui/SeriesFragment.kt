@@ -6,11 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.movieseries.data.PaginationState
 import com.example.movieseries.data.SavedItemEntity
-
 import com.example.movieseries.databinding.FragmentSeriesBinding
 import com.example.movieseries.viewmodel.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,22 +19,18 @@ class SeriesFragment : Fragment() {
     private var _binding: FragmentSeriesBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by activityViewModels()
     private lateinit var categoryAdapter: SeriesCategoryAdapter
     private lateinit var searchAdapter: SeriesAdapter
 
+    private val viewModel: HomeViewModel by activityViewModels()
     private val apiKey = "60af9fe8e3245c53ad9c4c0af82d56d6"
 
-    //paginationstate
     private val paginationMap = mutableMapOf<String, PaginationState>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentSeriesBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+    ) = FragmentSeriesBinding.inflate(inflater, container, false).also { _binding = it }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupRecyclerView()
@@ -45,6 +39,7 @@ class SeriesFragment : Fragment() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             paginationMap.clear()
             viewModel.loadSeriesCategories(apiKey)
+            binding.swipeRefreshLayout.isRefreshing = false
         }
 
         viewModel.loadSeriesCategories(apiKey)
@@ -77,7 +72,6 @@ class SeriesFragment : Fragment() {
             }
         )
 
-        //Searchadapter
         searchAdapter = SeriesAdapter(this) { series, isSaved ->
             val entity = SavedItemEntity(
                 id = series.id,
@@ -86,8 +80,7 @@ class SeriesFragment : Fragment() {
                 overview = series.overview,
                 posterPath = series.posterPath,
                 rating = series.rating.toDouble(),
-                type = "series",
-
+                type = "series"
             )
             if (isSaved) viewModel.saveItem(entity) else viewModel.removeItem(entity)
         }
@@ -97,7 +90,6 @@ class SeriesFragment : Fragment() {
             adapter = categoryAdapter
         }
 
-        //search
         binding.recyclerViewSearchResults.apply {
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = searchAdapter
@@ -106,7 +98,6 @@ class SeriesFragment : Fragment() {
 
     private fun loadNextPage(categoryTitle: String, page: Int) {
         viewModel.loadSeriesByCategory(apiKey, categoryTitle, page) { response ->
-            binding.swipeRefreshLayout.isRefreshing = false
             val state = paginationMap[categoryTitle] ?: return@loadSeriesByCategory
             state.isLoading = false
 
@@ -118,58 +109,41 @@ class SeriesFragment : Fragment() {
                 if (index != -1) {
                     val holder = binding.recyclerViewSeries.findViewHolderForAdapterPosition(index)
                             as? SeriesCategoryAdapter.CategoryViewHolder
-                    holder?.let { vh ->
-                        val adapter = vh.binding.horizontalRecyclerView.adapter as SeriesAdapter
-                        adapter.addItems(it.results)
+                    holder?.binding?.horizontalRecyclerView?.adapter?.let { adapter ->
+                        (adapter as SeriesAdapter).submitList((adapter.currentList + it.results))
                     }
                 }
             }
         }
     }
 
-
     private fun observeViewModel() {
-
         viewModel.savedSeries.observe(viewLifecycleOwner) { savedList ->
             val savedIds = savedList.map { it.id }.toSet()
+            categoryAdapter.updateSavedSeries(savedIds)
 
-
-            val updatedCategories = categoryAdapter.currentList.map { category ->
-                category.copy(
-                    series = category.series.map { it.copy(isSaved = savedIds.contains(it.id)) }
-                )
-            }
-            categoryAdapter.submitList(updatedCategories)
-
-
-            val updatedSearch = searchAdapter.getItems().map { series ->
-                series.copy(isSaved = savedIds.contains(series.id))
-            }
-            searchAdapter.setItems(updatedSearch)
+            val updatedSearch = searchAdapter.currentList.map { it.copy(isSaved = savedIds.contains(it.id)) }
+            searchAdapter.submitList(updatedSearch)
         }
-
 
         viewModel.seriesCategories.observe(viewLifecycleOwner) { categories ->
             val savedIds = viewModel.savedSeries.value?.map { it.id }?.toSet() ?: emptySet()
             val updatedCategories = categories.map { category ->
-                category.copy(
-                    series = category.series.map { it.copy(isSaved = savedIds.contains(it.id)) }
-                )
+                category.copy(series = category.series.map { it.copy(isSaved = savedIds.contains(it.id)) })
             }
             binding.swipeRefreshLayout.isRefreshing = false
             categoryAdapter.submitList(updatedCategories)
         }
 
-
         viewModel.searchResultsSeries.observe(viewLifecycleOwner) { results ->
-            if (results.isNotEmpty()) {
-                val savedIds = viewModel.savedSeries.value?.map { it.id }?.toSet() ?: emptySet()
-                val uniqueResults = results.distinctBy { it.id }
-                    .map { it.copy(isSaved = savedIds.contains(it.id)) }
+            val savedIds = viewModel.savedSeries.value?.map { it.id }?.toSet() ?: emptySet()
+            val uniqueResults = results.distinctBy { it.id }
+                .map { it.copy(isSaved = savedIds.contains(it.id)) }
 
+            if (uniqueResults.isNotEmpty()) {
                 binding.recyclerViewSearchResults.visibility = View.VISIBLE
                 binding.recyclerViewSeries.visibility = View.GONE
-                searchAdapter.setItems(uniqueResults)
+                searchAdapter.submitList(uniqueResults)
             } else {
                 binding.recyclerViewSearchResults.visibility = View.GONE
                 binding.recyclerViewSeries.visibility = View.VISIBLE
@@ -177,8 +151,10 @@ class SeriesFragment : Fragment() {
         }
     }
 
-
-
+    fun hideSearchResults() {
+        binding.recyclerViewSearchResults.visibility = View.GONE
+        binding.recyclerViewSeries.visibility = View.VISIBLE
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

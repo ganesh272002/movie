@@ -17,7 +17,7 @@ data class Movie(
     @SerializedName("poster_path") val posterPath: String?,
     @SerializedName("backdrop_path") val backdropPath: String?,
     @SerializedName("overview") val overview: String,
-    val isSaved: Boolean = false
+    var isSaved: Boolean = false
 ): Parcelable
 
 @Parcelize
@@ -66,12 +66,7 @@ data class PaginationState(
     var isLastPage: Boolean = false
 )
 
-data class PaginationStateSeries(
-    var currentPage: Int = 1,
-    var totalPages: Int = 1,
-    var isLoading: Boolean = false,
-    var isLastPage: Boolean = false
-)
+
 
 
 

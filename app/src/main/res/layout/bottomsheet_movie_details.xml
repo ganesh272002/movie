@@ -2,51 +2,98 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+
         <variable
             name="movie"
             type="com.example.movieseries.data.Movie" />
 
+        <variable
+            name="viewModel"
+            type="com.example.movieseries.viewmodel.HomeViewModel" />
 
+        <variable
+            name="isSaved"
+            type="Boolean" />
     </data>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="16dp"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/imagePoster"
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            android:scaleType="centerCrop"
-            android:background="@android:color/darker_gray"
-            app:imageUrl="@{movie.posterPath}" />
-
-        <TextView
-            android:id="@+id/textTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:paddingTop="8dp"
-            android:text='@{movie.title != null ? movie.title : movie.name}' />
+            android:background="@android:color/white"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/textRating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:textSize="16sp"
-            android:text='@{"Rating: " + String.format("%.1f", movie.rating)}' />
 
-        <TextView
-            android:id="@+id/textOverview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:textSize="14sp"
-            android:text='@{movie.overview}' />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-    </LinearLayout>
+
+                <TextView
+                    android:id="@+id/textTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingStart="8dp"
+                    android:text='@{movie.title != null ? movie.title : movie.name}'
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/imageClose"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="Close"
+                    android:padding="4dp"
+                    android:src="@drawable/outline_cancel_24" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imagePoster"
+                android:layout_width="match_parent"
+                android:layout_height="500dp"
+                android:background="@android:color/darker_gray"
+                android:scaleType="centerCrop"
+                app:imageUrl="@{movie.posterPath}" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingTop="8dp">
+
+                <TextView
+                    android:id="@+id/textRating"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text='@{"Rating: " + String.format("%.1f", movie.rating)}'
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:id="@+id/imageHeart"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="4dp"
+                    app:heartIcon="@{isSaved}" />
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/textOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text='@{movie.overview}'
+                android:textSize="14sp" />
+
+        </LinearLayout>
+    </FrameLayout>
 </layout>
